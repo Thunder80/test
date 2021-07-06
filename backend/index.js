@@ -5,56 +5,75 @@ const ms = require("ms");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 const cors = require("cors");
+const mongoose = require("mongoose");
+const User = require("./models/user");
 
 const app = express();
 
-const database = [];
-
-const JWT_SECRET = "aosdfojasodfafaweoijoanfsd";
-
-app.use(
-  cors({
-    origin: "*",
-    credentials: true,
-  })
-);
-app.use(cookieParser());
-app.use(express.json());
-
-app.get("/", (_, res) => {
-  res.sendFile(path.resolve(__dirname, "index.html"));
-});
-
-app.post("/signup", (req, res) => {
-  const { email, password } = req.body;
-  // validation
-
-  database.push({
-    email,
-    password: crpyto.createHash("md5").update(password).digest("hex"),
+const main = async () => {
+  await mongoose.connect("mongodb://localhost/userDatabase", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true,
   });
 
-  res.sendStatus(200);
-});
+  const JWT_SECRET = "aosdfojasodfafaweoijoanfsd";
 
-app.post("/login", (req, res) => {
-  const { email, password } = req.body;
-  // validation
+  app.use(
+    cors({
+      origin: "*",
+      credentials: true,
+    })
+  );
+  app.use(cookieParser());
+  app.use(express.json());
 
-  const user = database.find((e) => e.email === email);
-  if (!user) return res.sendStatus(400);
+  app.get("/", (_, res) => {
+    res.sendFile(path.resolve(__dirname, "index.html"));
+  });
 
-  const hashedPassword = crpyto
-    .createHash("md5")
-    .update(password)
-    .digest("hex");
+  app.get("/signup", async (req, res) => {
+    const { email, password } = req.query;
+    const user = await User.find();
 
-  if (hashedPassword !== user.password) return res.sendStatus(400);
+    res.json(user);
+  });
 
-  const token = jwt.sign({ email }, JWT_SECRET);
+  app.post("/signup", async (req, res) => {
+    const { email, password } = req.body;
+    // validation
 
-  res.cookie("login", token, { maxAge: ms("1d") });
-  res.sendStatus(200);
-});
+    await User.create({
+      email,
+      password: crpyto.createHash("md5").update(password).digest("hex"),
+    });
 
-app.listen(5000, () => console.log("Server listening on port 5000"));
+    res.json({ email, password });
+  });
+
+  app.post("/login", async (req, res) => {
+    const { email, password } = req.body;
+    // validation
+
+    const user = await User.findOne({ email });
+    console.log(user);
+    if (!user) return res.sendStatus(400);
+
+    const hashedPassword = crpyto
+      .createHash("md5")
+      .update(password)
+      .digest("hex");
+
+    if (hashedPassword !== user.password) return res.sendStatus(400);
+
+    const token = jwt.sign({ email }, JWT_SECRET);
+
+    res.cookie("login", token, { maxAge: ms("1d") });
+    res.sendStatus(200);
+  });
+
+  app.listen(5000, () => console.log("Server listening on port 5000"));
+};
+
+main();
