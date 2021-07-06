@@ -45,6 +45,16 @@ function App() {
       >
         Signup
       </button>
+      <button
+        onClick={async () => {
+          const res = await axios.get("http://localhost:5000/hamsters", {
+            withCredentials: true,
+          });
+          console.log(res.data);
+        }}
+      >
+        Get my hamsters
+      </button>
     </div>
   );
 }

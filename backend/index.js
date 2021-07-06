@@ -7,6 +7,7 @@ const path = require("path");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const User = require("./models/user");
+const authenticated = require("./middlewares/authenticated");
 
 const app = express();
 
@@ -18,26 +19,27 @@ const main = async () => {
     useCreateIndex: true,
   });
 
-  const JWT_SECRET = "aosdfojasodfafaweoijoanfsd";
-
   app.use(
     cors({
-      origin: "*",
+      origin: "http://localhost:3000",
       credentials: true,
     })
   );
   app.use(cookieParser());
   app.use(express.json());
 
-  app.get("/", (_, res) => {
-    res.sendFile(path.resolve(__dirname, "index.html"));
+  app.get("/hamsters", authenticated, (req, res) => {
+    await Hamster.find({ email: req.user });
+
+    res.send("aoisdjfio");
   });
 
-  app.get("/signup", async (req, res) => {
-    const { email, password } = req.query;
-    const user = await User.find();
+  app.post("/hamsters", authenticated, (req, res) => {
+    const { name, breed, age } = req.body;
 
-    res.json(user);
+    await Hamster.create({ name, breed, age, email: req.user });
+
+    res.send("aoisdjfio");
   });
 
   app.post("/signup", async (req, res) => {
