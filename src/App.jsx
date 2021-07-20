@@ -1,11 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
+import { setName } from "./redux/user/user.actions";
 
 import "./App.css";
 
 function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const user = useSelector((state) => state.user);
+  const dispatch = useDispatch();
 
   return (
     <div>
@@ -21,15 +26,7 @@ function App() {
       />
       <button
         onClick={async () => {
-          await axios.post(
-            "http://localhost:5000/login",
-            {
-              email,
-              password,
-            },
-            { withCredentials: true }
-          );
-          alert("Logged In");
+          dispatch(setName("sayan"));
         }}
       >
         Login
@@ -55,6 +52,7 @@ function App() {
       >
         Get my hamsters
       </button>
+      <p>This is = {user.name}</p>
     </div>
   );
 }
